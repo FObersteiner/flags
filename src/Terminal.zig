@@ -4,7 +4,7 @@ const std = @import("std");
 const ColorScheme = @import("ColorScheme.zig");
 
 const tty = std.Io.tty;
-const File = std.fs.File;
+const File = std.Io.File;
 
 writer: *std.Io.Writer,
 config: tty.Config,
