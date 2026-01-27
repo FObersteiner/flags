@@ -3,16 +3,17 @@ const Terminal = @This();
 const std = @import("std");
 const ColorScheme = @import("ColorScheme.zig");
 
-const tty = std.Io.tty;
+const tty = std.Io.Terminal;
 const File = std.Io.File;
 
 writer: *std.Io.Writer,
-config: tty.Config,
+t: tty,
 
-pub fn init(file: File, writer: *std.Io.Writer) Terminal {
+pub fn init(io: std.Io, file: File, writer: *std.Io.Writer) !Terminal {
+    const terminal_mode: std.Io.Terminal.Mode = try .detect(io, file, false, false);
     return .{
         .writer = writer,
-        .config = tty.detectConfig(file),
+        .t = .{ .writer = writer, .mode = terminal_mode },
     };
 }
 
@@ -23,12 +24,12 @@ pub fn print(
     args: anytype,
 ) void {
     for (style) |color| {
-        terminal.config.setColor(terminal.writer, color) catch {};
+        terminal.t.setColor(color) catch {};
     }
 
     terminal.writer.print(format, args) catch {};
 
     if (style.len > 0) {
-        terminal.config.setColor(terminal.writer, .reset) catch {};
+        terminal.t.setColor(.reset) catch {};
     }
 }

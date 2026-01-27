@@ -1,20 +1,19 @@
 const std = @import("std");
 const flags = @import("flags");
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    defer _ = gpa.deinit();
+pub fn main(init: std.process.Init) !void {
+    const allocator = init.arena.allocator();
+    const io = init.io;
 
-    const args = try std.process.argsAlloc(gpa.allocator());
-    defer std.process.argsFree(gpa.allocator(), args);
+    const args = try init.minimal.args.toSlice(allocator);
 
-    const options = flags.parse(args, "trailing", Flags, .{});
+    const options = flags.parse(io, args, "trailing", Flags, .{});
 
-    var stdout_writer = std.fs.File.stdout().writer(&.{});
+    var stdout = std.Io.File.stdout().writerStreaming(io, &.{});
     try std.json.Stringify.value(
         options,
         .{ .whitespace = .indent_2 },
-        &stdout_writer.interface,
+        &stdout.interface,
     );
 }
 

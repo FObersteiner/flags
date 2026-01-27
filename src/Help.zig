@@ -3,7 +3,7 @@ const Help = @This();
 const std = @import("std");
 const meta = @import("meta.zig");
 
-const File = std.fs.File;
+const File = std.Io.File;
 const ColorScheme = @import("ColorScheme.zig");
 const Terminal = @import("Terminal.zig");
 
@@ -17,9 +17,9 @@ pub const Usage = struct {
     command: []const u8,
     body: []const u8,
 
-    pub fn render(usage: Usage, stdout: File, colors: *const ColorScheme) void {
-        var stdout_writer = stdout.writer(&.{});
-        const term = Terminal.init(stdout, &stdout_writer.interface);
+    pub fn render(io: std.Io, usage: Usage, stdout: File, colors: *const ColorScheme) void {
+        var stdout_writer = stdout.writerStreaming(io, &.{});
+        const term = Terminal.init(io, stdout, &stdout_writer.interface) catch unreachable;
         usage.renderToTerminal(term, colors);
     }
 
@@ -100,9 +100,9 @@ const Section = struct {
     }
 };
 
-pub fn render(help: *const Help, stdout: File, colors: *const ColorScheme) void {
-    var stdout_writer = stdout.writer(&.{});
-    const term = Terminal.init(stdout, &stdout_writer.interface);
+pub fn render(help: *const Help, io: std.Io, stdout: File, colors: *const ColorScheme) void {
+    var stdout_writer = stdout.writerStreaming(io, &.{});
+    const term = Terminal.init(io, stdout, &stdout_writer.interface) catch unreachable;
     help.usage.renderToTerminal(term, colors);
 
     if (help.description) |description| {
